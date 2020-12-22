@@ -4,7 +4,7 @@ FROM node:alpine
 WORKDIR /usr/app
 
 # Install PM2 globally
-RUN yarn add --global pm2
+RUN yarn global add pm2
 
 # Copy "package.json" and "package-lock.json" before other files
 # Utilise Docker cache to save re-installing dependencies if unchanged
