@@ -2,9 +2,54 @@ version: "3"
 services:
   nextjs:
     build: ./
+    restart: always
+    network_mode: bridge
+    expose: 
+      - 3000
+    environment:
+      VIRTUAL_HOST: localhost
+  mysql:  
+    image: mysql:5.7
+    volumes:
+      - /var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db
+      MYSQL_USER: blog-user
+      MYSQL_PASSWORD: supersecret
+  ghost:
+    image: ghost:latest
+    restart: always
+    network_mode: bridge
+    expose:
+      - 2368
+    environment:
+      VIRTUAL_HOST: ghost.localhost
+      database__client: mysql
+      database__connection__host: mysql
+      database__connection__user: blog-user
+      database__connection__password: supersecret
+      database__connection__database: db
+    volumes:
+      - /opt/ghost_content:/var/lib/ghost/contentversion
+    depends_on:
+      - mysql
+  nginx-proxy:
+    restart: always
+    image: jwilder/nginx-proxy
+    network_mode: bridge
     ports:
-      - 3000:300
-  nginx:
-    build: ./nginx
-    ports:
-      - 80:80
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/nginx/vhost.d"
+      - "/usr/share/nginx/html"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "/etc/nginx/certs"
+  letsencrypt-nginx-proxy-companion:
+    restart: always
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    volumes_from:
+      - "nginx-proxy"

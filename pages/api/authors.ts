@@ -1,4 +1,4 @@
-import { api } from "../config/ghostContentInit";
+import { api } from "./config/ghostContentInit";
 
 export async function getAuthor(authorSlug) {
   return await api.authors

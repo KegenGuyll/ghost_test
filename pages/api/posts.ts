@@ -1,4 +1,4 @@
-import { api } from "../config/ghostContentInit";
+import { api } from "./config/ghostContentInit";
 
 export async function getPosts() {
   return await api.posts
