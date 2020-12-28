@@ -1,43 +1,57 @@
-version: "3"
+version: "3.6"
+volumes:
+  ghostdb:
+  ghostdata:
 services:
+
   nextjs:
+  container_name: nextjs_container
     build: ./
     restart: always
-    network_mode: bridge
     expose: 
       - 3000
     environment:
       VIRTUAL_HOST: localhost
-  mysql:  
-    image: mysql:5.7
-    volumes:
-      - /var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: db
-      MYSQL_USER: blog-user
-      MYSQL_PASSWORD: supersecret
-  ghost:
-    image: ghost:latest
+  
+  ghostapp:
+    container_name: ghost_container
+    depends_on: 
+      - mysqldb
+    image: ghost:3.12.1-alpine
     restart: always
-    network_mode: bridge
-    expose:
+    expose: 
       - 2368
-    environment:
-      VIRTUAL_HOST: ghost.localhost
-      database__client: mysql
-      database__connection__host: mysql
-      database__connection__user: blog-user
-      database__connection__password: supersecret
-      database__connection__database: db
     volumes:
-      - /opt/ghost_content:/var/lib/ghost/contentversion
-    depends_on:
-      - mysql
+      - type: bind
+        source: ${GHOST_DATA} 
+        target: /var/lib/ghost/content
+    environment:
+      - VIRTUAL_HOST=ghost.localhost
+      - database__client=mysql
+      - database__connection__host=mysqldb
+      - database__connection__user=${MYSQL_USER}
+      - database__connection__password=${MYSQL_PASSWORD}
+      - database__connection__database=${MYSQL_DATABASE}
+      
+
+  mysqldb:
+    container_name: mysql_container
+    image: mysql/mysql-server:5.7.21
+    restart: always
+    volumes:
+      - type: bind
+        source: ${MYSQL_DATA}
+        target: /var/lib/mysql
+      - type: bind
+        source: ${MYSQL_BACKUP_DIR}
+        target: /var/lib/blog/backups
+    env_file:
+      - .env
+
   nginx-proxy:
+    container_name: nginx_container
     restart: always
     image: jwilder/nginx-proxy
-    network_mode: bridge
     ports:
       - "80:80"
       - "443:443"
@@ -46,7 +60,12 @@ services:
       - "/usr/share/nginx/html"
       - "/var/run/docker.sock:/tmp/docker.sock:ro"
       - "/etc/nginx/certs"
+    depends_on: 
+      - ghostapp
+      - nextjs
+
   letsencrypt-nginx-proxy-companion:
+    container_name: letsencrypt
     restart: always
     image: jrcs/letsencrypt-nginx-proxy-companion
     volumes:
