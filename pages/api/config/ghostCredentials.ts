@@ -1,3 +1,3 @@
-export const url = "http://142.93.193.54:3001";
-export const key = "c7c1353eef4b115a8684644667";
+export const url = "http://ghost.ghostdemo.xyz";
+export const key = "d0446fdbbe4f6f571235563e20";
 export const version = "v3";
