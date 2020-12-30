@@ -12,6 +12,7 @@ services:
       - 3000
     environment:
       VIRTUAL_HOST: ghostdemo.xyz
+      LETSENCRYPT_HOST: ghostdemo.xyz
   
   ghostapp:
     container_name: ghost_container
@@ -27,12 +28,13 @@ services:
         target: /var/lib/ghost/content
     environment:
       - VIRTUAL_HOST=ghost.ghostdemo.xyz
+      - LETSENCRYPT_HOST=ghost.ghostdemo.xyz
       - database__client=mysql
       - database__connection__host=mysqldb
       - database__connection__user=${MYSQL_USER}
       - database__connection__password=${MYSQL_PASSWORD}
       - database__connection__database=${MYSQL_DATABASE}
-      - url=http://ghostdemo.xyz
+      - url=https://ghostdemo.xyz
       
 
   mysqldb:
